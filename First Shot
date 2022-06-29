@@ -1,0 +1,83 @@
+int BuyOrder = 0;
+int SellOrder = 0;
+int ticket = 0;
+extern double lots = .01
+void OnTick()
+
+{
+    string signal= "";
+    string rsi = "";
+    string ma = "";
+double AverageTrueRangeValue = iATR (_Symbol,_Period,14,0);
+
+    double SARvalue = iSar(_Symbol,_Period,0.02,0.2,0);
+
+    if (SARvalue <Bid)
+        {
+            signal = "buy";
+        }
+
+    if(SARvalue>Ask)
+        {
+            signal = "sell";
+
+        }  
+
+    double RSIvalue = iRSI(_Symbol,_Period,14,PRICE_CLOSE,0);
+
+    if (RSIvalue <50)
+        {
+            rsi = "sell";
+        }
+
+    if(RSIvalue>50)
+        {
+            rsi = "buy";
+
+        } 
+        double MAvalue = iMA(_Symbol,_Period,200,0,MODE_SMA, PRICE_CLOSE,0);
+
+    if (MAvalue <Bid)
+        {
+            ma = "sell";
+        }
+
+    if(MAvalue>Ask)
+        {
+            ma = "buy";
+
+        } 
+
+if (signal =="buy" && rsi == "buy" && ma == "buy" && ticket == 0 && OrdersTotal()<5){
+ticket = OrderSend (_Symbol,OP_BUY,0.02,Ask,3,0,Ask+150*_Point,NULL,0,0,Green);
+BuyOrder = 1;
+SendNotification("Long on",_Symbol)
+return(0);
+}
+if(signal =="sell" && rsi == "sell", && ma =="sell" && ticket ==0 && OrdersTotal()<5)
+{
+
+ticket = OrderSend (_Symbol, OP_SELL, 0.02,Bid,3,0,Bid-150*Point,NULL,0,0Red);
+SellOrder = 1;
+SendNotification("Short on",_Symbol)
+return(0);
+}
+
+if(signal =="sell" && BuyOrder== 1;){
+    OrderClose(ticket,lots,Bid,3,Red);
+    BuyOrder =0;
+    ticket = 0;
+    SendNotification("Close Long on",_Symbol)
+    return (0);
+}
+if(signal =="buy" && SellOrder== 1;){
+    OrderClose(ticket,lots,Ask,3,Green);
+    SellOrder = 0;
+    ticket = 0;
+    SendNotification("Close Short on",_Symbol)
+    return (0);
+}
+Comment("The signal is:",signal);
+Comment("The rsi is:",rsi);
+Comment("The ma is:",ma);
+}
