@@ -1,0 +1,120 @@
+
+
+int BuyOrder = 0;
+int SellOrder = 0;
+int ticket = 0;
+int TradeThisPair=0;
+extern double lots = .01
+
+void OnTick()
+
+{
+
+bool CheckOpenOrders(){ 
+        // We need to scan all the open and pending orders to see if there are any.
+        // OrdersTotal returns the total number of market and pending orders.
+        // What we do is scan all orders and check if they are of the same symbol as the one where the EA is running.
+        for( int i = 0 ; i < OrdersTotal() ; i++ ) { 
+                // We select the order of index i selecting by position and from the pool of market/pending trades.
+                OrderSelect( i, SELECT_BY_POS, MODE_TRADES ); 
+                // If the pair of the order is equal to the pair where the EA is running.
+                if (OrderSymbol() == Symbol()) TradeThisPair=1; 
+        } 
+        // If the loop finishes it mean there were no open orders for that pair.
+        TradeThisPair=0;}
+
+    // Here, we fetch the current 3-period ATR value
+double atr = iATR(NULL, 0, 3, 0);
+ 
+// Since the stop loss will be a multiple of this ATR value,
+// we define this multiple. 2.5 times the ATR value
+// is often a good start:
+double atrMultiple = 1.5;
+ 
+// Now, we set our stop loss.
+// We multiply the ATR value by the ATR multiple
+// and divide by the Point constant
+// in order to get a value in points:
+int stopLoss = (int)(atr * atrMultiple / _Point);
+
+int takeProfit = stopLoss*2;
+    string signal= "";
+    string rsi = "";
+    string ma = "";
+double AverageTrueRangeValue = iATR (_Symbol,_Period,14,0);
+
+    double SARvalue = iSar(_Symbol,_Period,0.02,0.2,0);
+
+    if (SARvalue <Bid)
+        {
+            signal = "buy";
+        }
+
+    if(SARvalue>Ask)
+        {
+            signal = "sell";
+
+        }  
+
+    double RSIvalue = iRSI(_Symbol,_Period,14,PRICE_CLOSE,0);
+
+    if (RSIvalue <50)
+        {
+            rsi = "sell";
+        }
+
+    if(RSIvalue>50)
+        {
+            rsi = "buy";
+
+        } 
+        double MAvalue = iMA(_Symbol,_Period,200,0,MODE_SMA, PRICE_CLOSE,0);
+
+    if (MAvalue <Bid)
+        {
+            ma = "sell";
+        }
+
+    if(MAvalue>Ask)
+        {
+            ma = "buy";
+
+        } 
+
+if (signal =="buy" && rsi == "buy" && ma == "buy" && ticket == 0 && TradeThisPair==0){
+ticket = OrderSend (_Symbol,OP_BUY,0.02,Ask,3,stopLoss,0,NULL,0,0,Green);
+BuyOrder = 1;
+SendNotification("Long on",_Symbol)
+setChartColorBackground(clrChartreuse);
+return(0);
+}
+
+else if(signal =="sell" && rsi == "sell", && ma =="sell" && ticket ==0 && TradeThisPair==0)
+{
+ticket = OrderSend (_Symbol, OP_SELL, 0.02,Bid,3,stopLoss,0,NULL,0,0Red);
+SellOrder = 1;
+SendNotification("Short on",_Symbol)
+setChartColorBackground(clrRed);
+return(0);
+}
+else if (TradeThisPair ==1)setChartColorBackground(clrAqua);
+else setChartColorBackground (clrBlack);
+
+if(signal =="sell" && BuyOrder== 1;){
+    OrderClose(ticket,lots,Bid,3,Red);
+    BuyOrder =0;
+    ticket = 0;
+    SendNotification("Close Long on",_Symbol)
+    return (0);
+}
+if(signal =="buy" && SellOrder== 1;){
+    OrderClose(ticket,lots,Ask,3,Green);
+    SellOrder = 0;
+    ticket = 0;
+    SendNotification("Close Short on",_Symbol)
+    return (0);
+}
+Comment("The signal is:",signal);
+Comment("The rsi is:",rsi);
+Comment("The ma is:",ma);
+}
