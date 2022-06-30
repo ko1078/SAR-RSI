@@ -1,0 +1,111 @@
+int BuyOrder = 0;
+int SellOrder = 0;
+int buyticket ;
+int sellticket ;
+extern double sar1 = 0.02;
+extern double sar2 = 0.2;
+extern int rsinum = 14;
+extern int maint = 200;
+extern double lots = .01;
+extern double tpmult = 2;
+double atr;
+double direction;
+
+
+
+
+void OnTick()
+
+
+{
+
+    // Here, we fetch the current 3-period ATR value
+atr = iATR(NULL, 0, 3, 0);
+
+// Since the stop loss will be a multiple of this ATR value,
+// we define this multiple. 2.5 times the ATR value
+// is often a good start:
+double atrMultiple = 1.5;
+
+// Now, we set our stop loss.
+// We multiply the ATR value by the ATR multiple
+// and divide by the Point constant
+// in order to get a value in points:
+int stopLoss = (int)(atr * atrMultiple / _Point);
+
+int takeProfit = stopLoss*2;
+    string signal= "";
+    string rsi = "";
+    string ma = "";
+double AverageTrueRangeValue = iATR (_Symbol,_Period,14,0);
+
+    double SARvalue = iSAR(_Symbol,_Period,sar1,sar2,0);
+
+    if (SARvalue <Bid)
+        {
+            signal = "buy";
+        }
+
+    if(SARvalue>Ask)
+        {
+            signal = "sell";
+
+        }  
+
+    double RSIvalue = iRSI(_Symbol,_Period,rsinum,PRICE_CLOSE,0);
+
+    if (RSIvalue <50)
+        {
+            rsi = "sell";
+        }
+
+    if(RSIvalue>50)
+        {
+            rsi = "buy";
+
+        } 
+        double MAvalue = iMA(_Symbol,_Period,maint,0,MODE_SMA, PRICE_CLOSE,0);
+
+    if (MAvalue <Bid)
+        {
+            ma = "sell";
+        }
+
+    if(MAvalue>Ask)
+        {
+            ma = "buy";
+
+        } 
+double longsl = Ask-stopLoss*_Point;
+double longtp =Ask+stopLoss*tpmult*_Point;
+double shortsl = Bid +stopLoss*_Point;
+double shorttp =Bid-stopLoss*tpmult*_Point;
+if (signal =="buy" && rsi == "buy" && ma == "buy" &&direction !=1){
+Alert (Symbol()," Long, StopLoss = ",longsl, ", TakeProfit = ",longtp);
+direction = 1;
+}
+if(signal =="sell" && rsi == "sell" && ma =="sell"&&direction!=2)
+{
+
+Alert (Symbol()," Short, StopLoss = ",longsl, ", TakeProfit = ",longtp);
+direction=2;
+}
+
+if(signal =="sell" && buyticket>0){
+    OrderClose(buyticket,lots,Bid,5,Red);
+    BuyOrder =0;
+    buyticket = 0;
+    SendNotification("Close Long on"+Symbol());
+ GetLastError();
+}
+if(signal =="buy" && sellticket>0){
+    OrderClose(sellticket,lots,Ask,5,Green);
+    SellOrder = 0;
+    sellticket = 0;
+    SendNotification("Close Short on"+Symbol());
+GetLastError();
+}
+Comment("The signal is:",signal);
+Comment("The rsi is:",rsi);
+Comment("The ma is:",ma);
+}
